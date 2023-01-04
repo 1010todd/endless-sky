@@ -94,6 +94,8 @@ protected:
 	Point position;
 	Point velocity;
 	Angle angle;
+	double angularMomentum;
+	int momentumDirection;
 	// A zoom of 1 means the sprite should be drawn at half size. For objects
 	// whose sprites should be full size, use zoom = 2.
 	float zoom = 1.f;
