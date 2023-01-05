@@ -1930,23 +1930,17 @@ void Ship::Move(vector<Visual> &visuals, list<shared_ptr<Flotsam>> &flotsam)
 				slowness += scale * attributes.Get("turning slowing");
 				disruption += scale * attributes.Get("turning disruption");
 
-				angularMomentum = max(TurnRate(), angularMomentum + commands.Turn() * (TurnRate() / 20) * slowMultiplier);
-				momentumDirection = commands.Turn();
+				double turnDeg = angularMomentum + commands.Turn() * (TurnRate() / 60) * slowMultiplier;
+				angularMomentum = min(max(commands.Turn() * TurnRate(), turnDeg), turnDeg);
 			}
 		}
-		/*
-		if(!commands.Turn() && round(angularMomentum) != 0.)
-		{
-			angularMomentum -= momentumDirection * TurnRate();
-		}
-		*/
 		if(!commands.Turn())
 		{
 			if(angularMomentum > 0.)
 			{
-				angularMomentum = max(0., angularMomentum - TurnRate());
+				angularMomentum = max(0., angularMomentum - (TurnRate() / 60));
 			} else {
-				angularMomentum = min(0., angularMomentum + TurnRate());
+				angularMomentum = min(0., angularMomentum + (TurnRate() / 60));
 			}
 		}
 		angle += angularMomentum;
