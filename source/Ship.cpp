@@ -1930,17 +1930,30 @@ void Ship::Move(vector<Visual> &visuals, list<shared_ptr<Flotsam>> &flotsam)
 				slowness += scale * attributes.Get("turning slowing");
 				disruption += scale * attributes.Get("turning disruption");
 
-				double turnDeg = angularMomentum + commands.Turn() * (TurnRate() / 60) * slowMultiplier;
-				angularMomentum = min(max(commands.Turn() * TurnRate(), turnDeg), turnDeg);
+				// TurnRate() is both the the max turn rate and "turn acceleration",
+				// 60 is some random magic number to chop "turn acceleration" down
+				// and actually allow a period of acceleration before it reaches
+				// max turn rate.
+				double TurnAccel = TurnRate() / 60.;
+				double turnAmount = angularMomentum + commands.Turn() * (TurnRate() / 60.) * slowMultiplier;
+				angularMomentum = min(max(commands.Turn() * TurnRate(), turnAmount), turnAmount);
+				int turnAssist = 0; //Placeholder for actual preference
+				if(turnAssist)
+				{
+					double desiredAngularMomentum = commands.Turn() * TurnRate() * slowMultiplier;
+					double turnAmount = min(TurnRate(), max(-TurnRate(), (desiredAngularMomentum - angularMomentum)));
+					angularMomentum += turnAmount;
+				}
 			}
 		}
-		if(!commands.Turn())
+		int turnAssist = 0;
+		if(!commands.Turn() && turnAssist)
 		{
 			if(angularMomentum > 0.)
 			{
-				angularMomentum = max(0., angularMomentum - (TurnRate() / 60));
+				angularMomentum = max(0., angularMomentum - (TurnRate() / 60.));
 			} else {
-				angularMomentum = min(0., angularMomentum + (TurnRate() / 60));
+				angularMomentum = min(0., angularMomentum + (TurnRate() / 60.));
 			}
 		}
 		angle += angularMomentum;
