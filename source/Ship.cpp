@@ -1936,17 +1936,17 @@ void Ship::Move(vector<Visual> &visuals, list<shared_ptr<Flotsam>> &flotsam)
 				// max turn rate.
 				double TurnAccel = TurnRate() / 60.;
 				double turnAmount = angularMomentum + commands.Turn() * (TurnRate() / 60.) * slowMultiplier;
-				angularMomentum = min(max(commands.Turn() * TurnRate(), turnAmount), turnAmount);
-				int turnAssist = 0; //Placeholder for actual preference
+				//angularMomentum = min(max(commands.Turn() * TurnRate(), turnAmount), turnAmount);
+				int turnAssist = 1; //Placeholder for actual preference
 				if(turnAssist)
 				{
-					double desiredAngularMomentum = commands.Turn() * TurnRate() * slowMultiplier;
+					double desiredAngularMomentum = angularMomentum + commands.Turn() * (TurnRate() / 60.) * slowMultiplier;
 					double turnAmount = min(TurnRate(), max(-TurnRate(), (desiredAngularMomentum - angularMomentum)));
-					angularMomentum += turnAmount;
+					angularMomentum = max(min(TurnRate(), angularMomentum + turnAmount), -TurnRate());
 				}
 			}
 		}
-		int turnAssist = 0;
+		int turnAssist = 1;
 		if(!commands.Turn() && turnAssist)
 		{
 			if(angularMomentum > 0.)
@@ -1957,6 +1957,7 @@ void Ship::Move(vector<Visual> &visuals, list<shared_ptr<Flotsam>> &flotsam)
 			}
 		}
 		angle += angularMomentum;
+		//angle +=  min(TurnRate(), max(-TurnRate(), angularMomentum));
 		double thrustCommand = commands.Has(Command::FORWARD) - commands.Has(Command::BACK);
 		double thrust = 0.;
 		if(thrustCommand)
