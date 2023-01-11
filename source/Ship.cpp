@@ -1934,7 +1934,7 @@ void Ship::Move(vector<Visual> &visuals, list<shared_ptr<Flotsam>> &flotsam)
 				// 60 is some random magic number to chop "turn acceleration" down
 				// and actually allow a period of acceleration before it reaches
 				// max turn rate.
-				double turnAccel = TurnRate() / (InertialMass()/2.);
+				double turnAccel = TurnRate() / (InertialMass()/3.);
 				double turnAmount = angularMomentum + commands.Turn() * (turnAccel) * slowMultiplier;
 				//angularMomentum = min(max(commands.Turn() * TurnRate(), turnAmount), turnAmount);
 				int turnAssist = 1; //Placeholder for actual preference
