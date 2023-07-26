@@ -1,0 +1,9 @@
+test "Plugin Installed Autocondition"
+	status active
+	description "Tests if the 'installed plugin: ' autocondition works."
+	sequence
+		# Create/inject the savegame and load it.
+		inject "Three Earthly Barges Save"
+		call "Load First Savegame"
+		assert
+			"installed plugin: integration-tests" == 1
