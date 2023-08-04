@@ -3107,7 +3107,7 @@ void PlayerInfo::RegisterDerivedConditions()
 	auto &&tributeProvider = conditions.GetProviderPrefixed("tribute: ");
 	auto tributeHasGetFun = [this](const string &name) -> int64_t
 	{
-		const Planet *planet = GameData::Planets().Find(name);
+		const Planet *planet = GameData::Planets().Find(name.substr(strlen("tribute: ")));
 		if(!planet)
 			return 0;
 
@@ -3662,6 +3662,15 @@ void PlayerInfo::RegisterDerivedConditions()
 	};
 	visitedSystemProvider.SetGetFunction(visitedSystemFun);
 	visitedSystemProvider.SetHasFunction(visitedSystemFun);
+
+	auto &&pluginProvider = conditions.GetProviderPrefixed("installed plugin: ");
+	auto pluginFun = [](const string &name) -> bool
+	{
+		const Plugin *plugin = Plugins::Get().Find(name.substr(strlen("installed plugin: ")));
+		return plugin ? plugin->enabled : false;
+	};
+	pluginProvider.SetHasFunction(pluginFun);
+	pluginProvider.SetGetFunction(pluginFun);
 
 	// Read-only navigation conditions.
 	auto HyperspaceTravelDays = [](const System *origin, const System *destination) -> int
