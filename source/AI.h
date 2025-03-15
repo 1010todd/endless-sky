@@ -18,7 +18,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Command.h"
 #include "FireCommand.h"
 #include "FormationPositioner.h"
-#include "Orders.h"
 #include "Point.h"
 
 #include <cstdint>
@@ -80,8 +79,8 @@ template <class Type>
 	void SetMousePosition(Point position);
 
 	// Get the in-system strength of each government's allies and enemies.
-	int64_t AllyStrength(const Government *government);
-	int64_t EnemyStrength(const Government *government);
+	int64_t AllyStrength(const Government *government) const;
+	int64_t EnemyStrength(const Government *government) const;
 
 	// Find nearest landing location.
 	static const StellarObject *FindLandingLocation(const Ship &ship, const bool refuel = true);
@@ -103,6 +102,7 @@ private:
 	bool FollowOrders(Ship &ship, Command &command);
 	void MoveInFormation(Ship &ship, Command &command);
 	void MoveIndependent(Ship &ship, Command &command) const;
+	void MoveWithParent(Ship &ship, Command &command, const Ship &parent);
 	void MoveEscort(Ship &ship, Command &command);
 	static void Refuel(Ship &ship, Command &command);
 	static bool CanRefuel(const Ship &ship, const StellarObject *target);
@@ -118,9 +118,9 @@ private:
 	// "precision" is an optional argument corresponding to a value of the dot product of the current and target facing
 	// vectors above which no turning should be attempting, to reduce constant, minute corrections.
 	static double TurnToward(const Ship &ship, const Point &vector, const double precision = 0.9999);
-	static bool MoveToPlanet(Ship &ship, Command &command);
+	static bool MoveToPlanet(Ship &ship, Command &command, double cruiseSpeed = 0.);
 	static bool MoveTo(Ship &ship, Command &command, const Point &targetPosition,
-		const Point &targetVelocity, double radius, double slow);
+		const Point &targetVelocity, double radius, double slow, double cruiseSpeed = 0.);
 	static bool Stop(Ship &ship, Command &command, double maxSpeed = 0., const Point direction = Point());
 	static void PrepareForHyperspace(Ship &ship, Command &command);
 	static void CircleAround(Ship &ship, Command &command, const Body &target);
@@ -177,6 +177,36 @@ private:
 	// Functions to classify ships based on government and system.
 	void UpdateStrengths(std::map<const Government *, int64_t> &strength, const System *playerSystem);
 	void CacheShipLists();
+
+
+private:
+	class Orders {
+	public:
+		static const int HOLD_POSITION = 0x000;
+		// Hold active is the same command as hold position, but it is given when a ship
+		// actively needs to move back to the position it was holding.
+		static const int HOLD_ACTIVE = 0x001;
+		static const int MOVE_TO = 0x002;
+		// HARVEST is related to MINE and is for picking up flotsam after
+		// ATTACK.
+		static const int HARVEST = 0x003;
+		static const int KEEP_STATION = 0x100;
+		static const int GATHER = 0x101;
+		static const int ATTACK = 0x102;
+		static const int FINISH_OFF = 0x103;
+		// MINE is for fleet targeting the asteroid for mining. ATTACK is used
+		// to chase and attack the asteroid.
+		static const int MINE = 0x104;
+		// Bit mask to figure out which orders are canceled if their target
+		// ceases to be targetable or present.
+		static const int REQUIRES_TARGET = 0x100;
+
+		int type = 0;
+		std::weak_ptr<Ship> target;
+		std::weak_ptr<Minable> targetAsteroid;
+		Point point;
+		const System *targetSystem = nullptr;
+	};
 
 
 private:
